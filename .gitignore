@@ -1,0 +1,6 @@
+*.pyc
+/credentials
+/data
+/__pycache__
+/models
+/notebooks
