@@ -4,10 +4,23 @@ import argparse
 import numpy as np
 import tensorflow_hub as hub
 import pandas as pd
+from datetime import timedelta
 
-from multiprocessing import Pool
+
+# couldn't figure out how to get Pool work with 
+# the Module class
+# from multiprocessing import Pool
 from sklearn.metrics.pairwise import cosine_similarity
 
+
+CHUNKSIZE    = 10
+POOLSIZE     = 2
+WINDOW_SIZE  = 5
+CHUNKSIZE    = WINDOW_SIZE * 1000
+TIME_WINDOW  = timedelta(hours=12)
+THRESH_END   = 0.95
+THRESH_START = 0.6
+MIN_SCORE   = 20
 
 def compute_most_similar_titles_for_chunk(chunk):
     _embeddings = embed(chunk['title'].values)
@@ -19,28 +32,44 @@ def compute_most_similar_titles_for_chunk(chunk):
 
 def get_similarity_record(r):
     m, sim_score = r
-    delta = m.time.diff()[1:]
-    return {'matches' : [(d.url, d.title, d.time, d.score)
+    delta = m.timestamp.diff()[1:]
+    pair_score_gt_than_thresh = (m.score >= MIN_SCORE).all()
+    return {'matches' : [(d.title, d.timestamp, d.score)
                           for d in m.itertuples()],
-            'sim_score' :sim_score, 
+            'sim_score' :sim_score,
+            'scores_pass_thresh' : pair_score_gt_than_thresh,
             'timedelta' : delta}
 
+def compute_similarity(data, size):
+    for chunk in chunker(data, size):
+        yield compute_most_similar_titles_for_chunk(chunk)
+
+def chunker(x, size):
+    for i in range(0, len(x), size):
+         yield x.iloc[i:i+size]
 
 
+def filter_records(data):
+    return 
 
+def create_stats(data):
+    return
+                
+            
 if __name__ == '__main__':
 
-    fname = './data/links.csv'
-    USE = './notebooks/use'
-
-    CHUNKSIZE = 10
-    POOLSIZE = 5
+    fname = './data/hn-posts.json'
+    use_fname = './notebooks/use'
     embed = hub.load(USE)
-    data = pd.read_csv(fname, chunksize=CHUNKSIZE)
-    pool = Pool(POOLSIZE)
-    
-    for chunk in data:
-        chunk.time = pd.to_datetime(chunk.time, unit='s')
-        res = compute_most_similar_titles_for_chunk(chunk)
-        print(get_similarity_record(res))
-        
+        data = pd.read_json(use_fname, chunksize=CHUNKSIZE, lines=True)
+   
+    # for chunk in pool.imap(compute_most_similar_titles_for_chunk, chunker(data, 5)):
+    for batch in data: 
+        for chunk in chunker(batch, size=WINDOW_SIZE):
+            res = compute_most_similar_titles_for_chunk(chunk)
+            record = get_similarity_record(res)
+            score = record['sim_score']
+            if (record['timedelta'] < TIME_WINDOW).all() \
+                and score > THRESH_START and score < THRESH_END\
+                and record['pair_score_gt_than_thresh']:
+                print(record)
