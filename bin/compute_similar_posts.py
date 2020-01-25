@@ -37,7 +37,7 @@ def get_similarity_record(r):
     return {'matches' : [(d.title, d.timestamp, d.score)
                           for d in m.itertuples()],
             'sim_score' :sim_score,
-            'scores_pass_thresh' : pair_score_gt_than_thresh,
+            'pair_score_gt_than_thresh' : pair_score_gt_than_thresh,
             'timedelta' : delta}
 
 def compute_similarity(data, size):
@@ -60,10 +60,9 @@ if __name__ == '__main__':
 
     fname = './data/hn-posts.json'
     use_fname = './notebooks/use'
-    embed = hub.load(USE)
-        data = pd.read_json(use_fname, chunksize=CHUNKSIZE, lines=True)
+    embed = hub.load(use_fname)
+    data = pd.read_json(fname, chunksize=CHUNKSIZE, lines=True)
    
-    # for chunk in pool.imap(compute_most_similar_titles_for_chunk, chunker(data, 5)):
     for batch in data: 
         for chunk in chunker(batch, size=WINDOW_SIZE):
             res = compute_most_similar_titles_for_chunk(chunk)
