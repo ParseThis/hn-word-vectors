@@ -4,12 +4,16 @@
 https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 Compatible with: spaCy v2.0.0+
 """
-from __future__ import unicode_literals
 import plac
 import numpy
 
 import spacy
 from spacy.language import Language
+
+
+# the word embedding a base model.
+# from : This is mostly patched up from 
+# https://github.com/explosion/spaCy/blob/master/examples/vectors_fast_text.py
 
 
 @plac.annotations(

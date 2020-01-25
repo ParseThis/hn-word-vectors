@@ -11,7 +11,7 @@ try:
     import ujson as json
 except ImportError:
     import json
-from gensim.models import Word2Vec
+from gensim.models import FastText
 from preshed.counter import PreshCounter
 from spacy.strings import hash_string
 import gzip
@@ -58,13 +58,13 @@ def iter_dir(loc):
     negative=("Number of negative samples", "option", "g", int),
     nr_iter=("Number of iterations", "option", "i", int),
 )
-def main(in_dir, out_loc, negative=5, n_workers=4, window=3, size=128, min_count=5, nr_iter=2):
+def main(in_dir, out_loc, negative=5, n_workers=4, window=3, size=128, min_count=1, nr_iter=2):
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     model = FastText(
         size=size,
         window=window,
-        min_count=min_count,
-        workers=n_workers,
+        min_count=min_count
+R        workers=n_workers,
         sample=1e-5,
         negative=negative
     )
@@ -77,3 +77,5 @@ def main(in_dir, out_loc, negative=5, n_workers=4, window=3, size=128, min_count
 
 if __name__ == '__main__':
     plac.call(main)
+
+

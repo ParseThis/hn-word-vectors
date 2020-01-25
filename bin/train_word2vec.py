@@ -57,7 +57,13 @@ def iter_dir(loc):
     negative=("Number of negative samples", "option", "g", int),
     nr_iter=("Number of iterations", "option", "i", int),
 )
-def main(in_dir, out_loc, negative=5, n_workers=4, window=3, size=128, min_count=5, nr_iter=2):
+
+
+# window size 3 becauase the average sentence length is.
+# min count 1 since most of the interesting words appear
+# less often. 
+
+def main(in_dir, out_loc, negative=5, n_workers=4, window=3, size=128, min_count=1, nr_iter=2):
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     model = Word2Vec(
         size=size,
