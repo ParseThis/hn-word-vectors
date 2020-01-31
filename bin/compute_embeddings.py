@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow_hub as hub
 
 class IterPosts:
-
     def __init__(self, fname, size):
         self.fname = fname
         self.size =  size
@@ -17,9 +16,9 @@ class IterPosts:
                 chunk = []
             else:
                 chunk.append(d)
-        # if this i % 5 != 0 then
+        # if this i % chunk at this point != 0 then
         # there are still elements in chunk
-        # after the loop above
+        # after the loop above yield that chunk
         if chunk:
             yield chunk
 
@@ -32,7 +31,6 @@ def _embed_update(chunk):
 
 if __name__ == '__main__':
 
-    
     CHUNKSIZE = 5000
     fname = './data/hn-posts.json'
     chunks = IterPosts(fname, CHUNKSIZE)

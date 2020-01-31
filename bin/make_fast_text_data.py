@@ -1,8 +1,7 @@
 import os.path
 from utils import preprocess
-HOME = os.path.join(os.path.expanduser("~"), 'hacker-news-link-study', 'data', 'full-news')
-
-
+HOME = os.path.join(os.path.expanduser("~"), 
+                    'hacker-news-link-study', 'data', 'full-news')
 
 if __name__ == "__main__":
 	with open(HOME + '/titles_together.txt', 'w') as out_:
