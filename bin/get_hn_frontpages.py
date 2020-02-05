@@ -1,6 +1,9 @@
+import sys
+import os
+import time
 import json 
-import requests 
 import grequests 
+import requests 
 import re
 
 # match timestamps
@@ -12,36 +15,59 @@ class IterUrls:
 
     @staticmethod
     def _parse_log(text):
-        timestamp = re.match(TIMESTAMP_RE, text)
+        timestamp = re.search(TIMESTAMP_RE, text)
         if not timestamp:
             return 
-        return timestamp.group()
+        return timestamp.group().strip()
 
     @staticmethod
     def _make_url(timestamp):
-        return  'http://web.archive.org/werb/{timestamp}/http://www.news.ycombinator.com:80'
+        return f'http://web.archive.org/web/{timestamp}/http://www.news.ycombinator.com:80'
 
     def __iter__(self):
         with open(fname) as f:
             for log in f:
-                url = IterUrls._make_url_
                 timestamp = IterUrls._parse_log(log)
                 if timestamp:
-                    yield timestamp
+                    url = IterUrls._make_url(timestamp)
+                    yield url
+
+def _parse_response(response):
+
+    if response.ok:
+        return {'headers' : dict(response.headers),
+                'content' : response.text}
+    else:
+        print(response.status_code)
+        print(response.text)
+        return 
 
 if __name__ == '__main__':
     
-    session = requests.Session()
-    # default max pool size = 10
-    # which right were I think is reasonable
-    # adapter = requests.adapters.HTTPAdapter(pool_maxsize=(MAX_POOL_SIZE)
-
-    # make N requests effectively in parallel
-
+    CHUNK = 50
+    SLEEP = 60
     fname = sys.argv[1] # use argparse
-    urls = IterUrls(fname)
-
+    outdir = sys.argv[2]
     
+    
+    os.makedirs(outdir, exist_ok=True) 
+    
+  
+    urls = (grequests.get(url) for url in IterUrls(fname))
+    for i, response in enumerate(grequests.imap(urls)):
+        parsed_response = _parse_response(response)
+        if parsed_response:
+            fname = parsed_response['headers'].get('x-cache-key',
+                                                    'no-x-cache-key-' + str(i)
+                                                   + '.json')
+            fname = fname.replace('/', '-')
+            fname = os.path.join(outdir, fname) 
+            with open(fname, 'w') as  _out:
+                print(f'Writing Response to file {fname}...')
+                json.dump(parsed_response, _out)
+            if i%CHUNK==0 and i!=0: 
+                print('LAZY: Sleeping for a bit ...')
+                time.sleep(SLEEP)
     
 
 
